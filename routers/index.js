@@ -6,8 +6,9 @@ const URL='http://localhost:8002/v2'
 axios.defaults.headers.origin = 'http://localhost:4000' //origin 헤더 추가
 const request = async (req,api) => {
     try {
-        if (!req.session.jwt) { // 세션에 토큰 없으면
+        if (!req.session.jwt) { // 세션에 토큰 없으면(사용자 JWT 토큰)
             const tokenResult = await axios.post(`${URL}/token`,{
+                //req.body에 clientSecret:process.env.CLIENT_SECRET인 프로퍼티를 넣는다.
                 clientSecret:process.env.CLIENT_SECRET
             })
             req.session.jwt=tokenResult.data.token //세션에 토큰 저장
@@ -15,6 +16,7 @@ const request = async (req,api) => {
         }
         // 토큰이 존재하면 서버에서 원하는 API 불러와서 출력하기
         return await axios.get(`${URL}${api}`,{
+            //req.body가 아닌 req.headers에 다음 프로퍼티를 넣는다.
             headers:{authorization:req.session.jwt}
         }) //api 요청
     } catch (error) {
@@ -27,6 +29,10 @@ const request = async (req,api) => {
 
     }
 }
+
+router.get('/',(req,res)=>{
+    res.render('main',{key:process.env.CLIENT_SECRET})
+})
 
 router.get('/mypost',async(req,res,next)=>{
     try {
